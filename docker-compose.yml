@@ -1,0 +1,89 @@
+#incrementing port by 1 each time for each service
+#1152 2152 ....
+#for this to work we will change the code to facilitate the ports
+version: '3'
+services:
+  auth:
+    build:
+      context: ./Auth
+      dockerfile: Dockerfile
+    image: ahmed9350/auth:latest
+    ports:
+      - "2152:4000"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 50M
+        reservations:
+          cpus: '0.25'
+          memory: 20M
+  classrooms:
+    build:
+      context: ./Classrooms
+      dockerfile: Dockerfile
+    image: ahmed9350/classrooms:latest
+    ports:
+      - "3152:4001"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 50M
+        reservations:
+          cpus: '0.25'
+          memory: 20M
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    image: ahmed9350/client:latest
+    ports:
+      - "1152:5000"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 50M
+        reservations:
+          cpus: '0.25'
+          memory: 20M
+  event-bus:
+    build:
+      context: ./event-bus
+      dockerfile: Dockerfile
+    image: ahmed9350/event-bus:latest
+    ports:
+      - "4152:4009"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 50M
+        reservations:
+          cpus: '0.25'
+          memory: 20M
+  post:
+    build:
+      context: ./Post
+      dockerfile: Dockerfile
+    image: ahmed9350/post:latest
+    ports:
+      - "5152:4002"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 50M
+        reservations:
+          cpus: '0.25'
+          memory: 20M
+  mongo:
+    image: mongo:latest
+    volumes:
+      - mongodb_data:/data/db
+    ports:
+      - "27017:27017"
+
+volumes:
+  mongodb_data:
