@@ -15,6 +15,9 @@ const Posts = () => {
 
   const createPost = async (e) => {
     e.preventDefault();
+    //uncomment for docker step use 
+    //const res = await axios.post('http://localhost:5152/create_post', { classId, postTitle });
+    //use this for kubernetes deployment
     const res = await axios.post('http://localhost:5152/create_post', { classId, postTitle });
     setPosts(res.data);
     setPostTitle("");

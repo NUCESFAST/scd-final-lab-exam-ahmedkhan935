@@ -1,0 +1,180 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: exam
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: microservices-deployment
+  namespace: exam
+  annotations:
+    description: "This is a deployment for the microservices"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: microservices
+  template:
+    metadata:
+      labels:
+        app: microservices
+    spec:
+      containers:
+      - name: auth
+        image: ahmed9350/auth:latest
+        ports:
+        - containerPort: 4000
+      - name: classrooms
+        image: ahmed9350/classrooms:latest
+        ports:
+        - containerPort: 4001
+      - name: client
+        image: ahmed9350/client:latest
+        ports:
+        - containerPort: 5000
+        readinessProbe:
+          httpGet:
+            path: /login
+            port: 5000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          failureThreshold: 3
+        livenessProbe:
+          httpGet:
+            path: /login
+            port: 5000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          failureThreshold: 3
+
+      - name: event-bus
+        image: ahmed9350/event-bus:latest
+        ports:
+        - containerPort: 4009
+      - name: post
+        image: ahmed9350/post:latest
+        ports:
+        - containerPort: 4002
+      - name: mongo
+        image: mongo
+        ports:
+        - containerPort: 27017
+        volumeMounts:
+        - name: mongo-storage
+          mountPath: /data/db
+      volumes:
+      - name: mongo-storage
+        persistentVolumeClaim:
+          claimName: mongo-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth
+  namespace: exam
+  annotations:
+    description: "This is a service for the auth microservice"
+spec:
+  type: NodePort
+  selector:
+    app: microservices
+  ports:
+  - protocol: TCP
+    port: 4000
+    targetPort: 4000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: classrooms
+  namespace: exam
+  annotations:
+    description: "This is a service for the classrooms microservice"
+
+spec:
+  type: NodePort
+  selector:
+    app: microservices
+  ports:
+  - protocol: TCP
+    port: 4001
+    targetPort: 4001
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: post
+  namespace: exam
+  annotations:
+    description: "This is a service for the post microservice"
+spec:
+  type: NodePort
+  selector:
+    app: microservices
+  ports:
+  - protocol: TCP
+    port: 4002
+    targetPort: 4002
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: event-bus
+  namespace: exam
+  annotations:
+    description: "This is a service for the event-bus microservice"
+spec:
+  type: NodePort
+  selector:
+    app: microservices
+  ports:
+  - protocol: TCP
+    port: 4009
+    targetPort: 4009
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: exam
+  annotations:
+    description: "This is a service for the frontend microservice"
+spec:
+  type: NodePort
+  selector:
+    app: microservices
+  ports:
+  - protocol: TCP
+    port: 5000
+    targetPort: 5000
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mongo-pvc
+  namespace: exam
+  annotations:
+    description: "This is a persistent volume claim for the mongo microservice"
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mongo-pv
+  namespace: exam
+spec:
+  capacity:
+    storage: 1Gi
+  volumeMode: Filesystem
+  accessModes:
+  - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: manual
+  hostPath:
+    path: "/mnt/data"
